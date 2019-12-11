@@ -4,7 +4,6 @@ import numpy as np
 import time
 import pandas as pd
 
-
 def readFile(filename,nRows):
     df = pd.read_csv(filename,delimiter="\t",usecols=(0,1,2,5,7),nrows=nRows)
     data = df.values
@@ -24,7 +23,7 @@ def readFile(filename,nRows):
     #print(df['category'].values)
     print(df.category.unique())
     '''
-    return data
+    return df
 
 def readValidation(filename):
     #data = np.genfromtxt("mlchallenge_set_validation.tsv",delimiter="\t",usecols=(0,1,2,5,7),max_rows=1000)
@@ -33,14 +32,14 @@ def readValidation(filename):
     print(len(np.unique(data[:,:1])))
     return data
 
-def processAttributes(attribute):
+#def processAttributes(attribute):
 
 
 
 
 # Start of Program
 nRows = 5
-data = readFile("data.csv",nRows)
+df = readFile("data.tsv",nRows)
 
 attribute = df['attributes'].values
 
