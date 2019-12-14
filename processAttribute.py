@@ -112,7 +112,6 @@ def createAttributeList(attribute):
     #uniqAttriList = [x for x in fullAttributeList if x.lower() not in uniqAttriList and not uniqAttriList.add(x.lower())]
 
     uniqAttriList,attriWts = filterAttriByWts(uniqAttriList,attriWts,cutOff)
-
     uniqAttriList,attriWts = filterAttriByIgnoreList(uniqAttriList,attriWts,attriWordsToIgnore)
 
     # Cluster list of attributes to cut down on attributes further
@@ -126,9 +125,10 @@ def createAttributeList(attribute):
         # The ignore list words are also checked in the values of the attributes (eg: note: free shipping)
         ignWordsContained = False
         for thisAttri in attriWordsToIgnore:
-            if thisVal.find(thisAttri)>0:
+            if str(thisVal).find(thisAttri)>0:
                 ignWordsContained = True
 
+        # Look for empty values and discard that
         if len(thisVal) >0 and not ignWordsContained:
             masterDictFiltered.update({keys:masterDict[keys]})
 
