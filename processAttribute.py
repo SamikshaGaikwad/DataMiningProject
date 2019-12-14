@@ -70,7 +70,10 @@ def calcAttributeWts(thisAttri):
     #a = list(set(a))
     return list(b.keys()),list(b.values())
 
-def filterAttriByWts(uniqAttriList,attriWts,cutOff):
+def filterAttriByWts(attriList,cutOff):
+    # Calculate Attribute Wts first
+    uniqAttriList,attriWts = calcAttributeWts(attriList)
+
     goodId = [x>cutOff for x in attriWts]
     uniqAttriList = np.array(uniqAttriList)
     attriWts = np.array(attriWts)
@@ -100,7 +103,9 @@ def clusterAttributeNames(attributes):
 # Main function to filter attributes
 def createAttributeList(attribute):
     cutOff = 2 # Cutoff weights -Ignores attributes repeated less than cutoff times
-    attriWordsToIgnore = ['condition','price','ship','return','location','service','tax','gift','seller','refund','payments','expir']
+    attriWordsToIgnore = ['condition','price','ship','return','location','service',
+    'tax','gift','seller','refund','payments','expir','delive',
+    'msrp','desc']
 
     fullAttributeList,masterDict = createMasterAttributeList(attribute)
     print("Original Number of Attributes: " + str(len(fullAttributeList)))
@@ -108,10 +113,10 @@ def createAttributeList(attribute):
     #uniqAttributeList = list(set(fullAttributeList))
 
     # Get Case Insensitive Unique list
-    uniqAttriList,attriWts = calcAttributeWts(fullAttributeList) #set()
+    #uniqAttriList,attriWts = calcAttributeWts(fullAttributeList) #set()
     #uniqAttriList = [x for x in fullAttributeList if x.lower() not in uniqAttriList and not uniqAttriList.add(x.lower())]
 
-    uniqAttriList,attriWts = filterAttriByWts(uniqAttriList,attriWts,cutOff)
+    uniqAttriList,attriWts = filterAttriByWts(fullAttributeList,cutOff)
     uniqAttriList,attriWts = filterAttriByIgnoreList(uniqAttriList,attriWts,attriWordsToIgnore)
 
     # Cluster list of attributes to cut down on attributes further

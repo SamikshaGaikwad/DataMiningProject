@@ -43,6 +43,27 @@ def readValidation(filename):
     print(len(np.unique(data[:,:1])))
     return data
 
+def stemDataFrame(data):
+    sepWord = []
+    temp = data
+    # Pre-process the data - contains : and , and spaces
+    # Steps add spaces around colon and comma and then split by space and then stem
+    # Finally merge , remove spaces so that we store info where colons and commas
+    # were there and still split by all three punctuations
+    data = data.replace(',',' , ')
+    data = data.replace(':',' : ')
+
+    for word in data.split(' '):
+        #if i == 6:
+        #    print(str(word) + '---' + str(stemmer.stem(word)))
+        sepWord.append(stemmer.stem(word))
+    data = ' '.join(sepWord)
+
+    # Remove previously added spaces
+    data = data.replace(' , ',',')
+    data = data.replace(' : ',':')
+    return data
+
 def preProcess(df):
     for j in df.columns:
         if j in ['title', 'attributes']:
@@ -54,12 +75,19 @@ def preProcess(df):
                 # remove all single characters
                 thisDf[i] = re.sub(r'\s+[a-zA-Z]\s+', '', thisDf[i])
 
+                # Convert multiple commas to single comma
+                thisDf[i] = re.sub(r'(,){2,}', ',', thisDf[i])
+
+                # Convert multiple spaces to single space
+                thisDf[i] = re.sub(r'(\s){2,}', ' ', thisDf[i])
+
                 # Convert to lower case and strip extra spaces
                 thisDf[i] = thisDf[i].lower().strip()
-
+                temp = thisDf[i]
                 # Use nltk stemmer to create stemmed words
-                thisDf[i]  = [stemmer.stem(word) for word in thisDf[i]]
-                thisDf[i] =''.join(thisDf[i])
+                #sepWord  = [stemmer.stem(word) for word in thisDf[i]]
+
+                thisDf[i] = stemDataFrame(thisDf[i])
             # Assign the value back into dataframe
             df[j].value = thisDf
     return df
@@ -79,7 +107,9 @@ df = readFile(filename,nRows)
 #print(df.columns)
 
 # Pre-process the input file for simplification
+df.to_csv(r'file1.csv')
 df = preProcess(df)
+df.to_csv(r'file2.csv')
 
 # Get the attribute for processing
 attribute = df['attributes'].values
