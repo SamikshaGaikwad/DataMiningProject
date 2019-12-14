@@ -29,6 +29,7 @@ def printMasterAttributeList(attList,fname):
 
 def processAttributeStr(thisAttri):
     attDict = dict()
+    
     thisstr = thisAttri.strip('(').strip(')')
     thisstr = re.split(":+",thisstr)
     #print(thisstr)
