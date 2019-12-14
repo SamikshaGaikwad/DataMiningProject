@@ -11,33 +11,49 @@ import mmap
 def mergeDict(dict1, dict2):
     return(dict2.update(dict1))
 
-def findKeys(dict):
+def findKeys(dictn):
     keylist = []
-    for thiskey in dict.keys():
+    for thiskey in dictn.keys():
         keylist.append(thiskey)
     return keylist
 
-def createMasterAttributeList(attribute):
+def appendToKey(myDict,key,value):
+    temp = myDict.pop(key,[])
+    temp.append(value)
+    myDict[key] = value
+    return myDict
+
+def createMasterAttributeList(attributeRows):
     attList = []
-    for thisattri in attribute[1:]:
-        #print(thisattri)
-        attList.extend(findKeys(processAttributeStr(thisattri)))
-    return attList
+    masterDict = dict()
+    for thisattri in attributeRows:
+        thisAttriDict = processAttributeStr(thisattri)
+        thisAttrKeys = findKeys(thisAttriDict)
+        attList.extend(thisAttrKeys)
+        for x in list(thisAttrKeys):
+            masterDict = appendToKey(masterDict,x,thisAttriDict[x])
+    return attList,masterDict
 
 def printMasterAttributeList(attList,fname):
     np.savetxt(fname, attList,fmt='%s', delimiter='\n')
 
 def processAttributeStr(thisAttri):
     attDict = dict()
-    
-    thisstr = thisAttri.strip('(').strip(')')
-    thisstr = re.split(":+",thisstr)
-    #print(thisstr)
-    for idx in range(len(thisstr)-1):
-        attriTitle = re.split(',',thisstr[idx].strip())[-1]
-        attriVal = re.split(',',thisstr[idx+1].strip())[0:-1]
-        attDict[attriTitle] = attriVal
 
+    # Taken care in pre-processing step
+    #thisstr = thisAttri.strip('(').strip(')')
+    thisstr = re.split(":+",thisAttri)
+    strSz = len(thisstr)
+    for idx in range(strSz-1):
+        attriTitle = re.split(',',thisstr[idx].strip())[-1]
+        if idx == strSz -2:
+            attriVal = re.split(',',thisstr[idx+1].strip())[0:]
+        else:
+            attriVal = re.split(',',thisstr[idx+1].strip())[0:-1]
+
+        #attDict[attriTitle] = attriVal
+        appendToKey(attDict,attriTitle,attriVal)
+        #print(attDict)
     return attDict
 
 def calcAttributeWts(thisAttri):
@@ -83,7 +99,7 @@ def createAttributeList(attribute):
     cutOff = 5 # Cutoff weights -Ignores attributes repeated less than cutoff times
     attriWordsToIgnore = ['condition','price','ship','return','location','service','tax','gift','seller','refund','payments','expir']
 
-    fullAttributeList = createMasterAttributeList(attribute)
+    fullAttributeList,masterDict = createMasterAttributeList(attribute)
     print("Original Number of Attributes: " + str(len(fullAttributeList)))
     #uniqAttriList = np.sort(np.unique(fullAttributeList))
     #uniqAttributeList = list(set(fullAttributeList))
@@ -103,3 +119,4 @@ def createAttributeList(attribute):
     print("Filtered number of Attributes are: " + str(len(attriWts)))
     printMasterAttributeList(uniqAttriList,'attributeList.csv')
     printMasterAttributeList(attriWts,'attributeList1.csv')
+    return masterDict

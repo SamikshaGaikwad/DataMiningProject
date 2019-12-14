@@ -64,7 +64,7 @@ def preProcess(df):
     return df
 
 # Start of Program
-nRows = 1002276 #maxRows = 1002276
+nRows = 1000 #maxRows = 1002276
 #cutOff = 5 # Cutoff weights -Ignores attributes repeated less than cutoff times
 #attriWordsToIgnore = ['condition','price','shipping','return','location']
 
@@ -76,13 +76,15 @@ start_time = time.time()
 
 df = readFile(filename,nRows)
 #print(df.columns)
+
+# Pre-process the input file for simplification
 df = preProcess(df)
 
-
-#attribute = [x.lower().strip() for x in attribute]
-#print( df['title'].values)
+# Get the attribute for processing
 attribute = df['attributes'].values
-np.set_printoptions(threshold=sys.maxsize)
+masterDict = createAttributeList(attribute)
+print(masterDict)
+#np.set_printoptions(threshold=sys.maxsize)
 #print(np.array(df))
 '''
 tfidfconverter = TfidfVectorizer(max_features=1500, min_df=5, max_df=0.7)
@@ -90,7 +92,7 @@ X = tfidfconverter.fit_transform(attribute).toarray()
 np.set_printoptions(threshold=sys.maxsize)
 print(X)
 '''
-filteredAttribute = createAttributeList(attribute)
+
 
 
 
