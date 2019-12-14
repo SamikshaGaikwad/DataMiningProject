@@ -4,17 +4,26 @@ import numpy as np
 import time
 import pandas as pd
 import re
+import numpy as np
+import sklearn.cluster
+import distance
+import mmap
+
+
+from processAttribute import *
+
 
 # Python code to merge dict using a single
 # expression
-def mergeDict(dict1, dict2):
-    return(dict2.update(dict1))
 
-def findKeys(dict):
-    keylist = []
-    for thiskey in dict.keys():
-        keylist.append(thiskey)
-    return keylist
+def countFileLines(filename):
+    f = open(filename, "r+")
+    buf = mmap.mmap(f.fileno(), 0)
+    lines = 0
+    readline = buf.readline
+    while readline():
+        lines += 1
+    return lines
 
 def readFile(filename,nRows):
     df = pd.read_csv(filename,delimiter="\t",usecols=(0,1,2,5,7),nrows=nRows)
@@ -44,47 +53,46 @@ def readValidation(filename):
     print(len(np.unique(data[:,:1])))
     return data
 
-def createMasterAttributeList(attribute):
-    attList = []
-    for thisattri in attribute[1:]:
-        #print(thisattri)
-        attList.extend(findKeys(processAttributeStr(thisattri)))
-    return attList
-
-def printMasterAttributeList(attList,fname):
-    np.savetxt(fname, attList,fmt='%s', delimiter='\n')
-
-def processAttributeStr(thisattri):
-    attDict = dict()
-    thisstr = thisattri.strip('(').strip(')')
-    thisstr = re.split(":+",thisstr)
-    #print(thisstr)
-    for idx in range(len(thisstr)-1):
-        attriTitle = re.split(',',thisstr[idx])[-1]
-        attriVal = re.split(',',thisstr[idx+1])[0:-1]
-        attDict[attriTitle] = attriVal
-
-        #print(attDict)
-    #print(attDict.keys())
-    #print('')
-    return attDict
-
+# FAILED: Tries to cluster list of attributes into clusters
+def clusterAttributeNames(attributes):
+    attributes = np.asarray(attributes)
+    lev_similarity = -1*np.array([[distance.levenshtein(w1,w2) for w1 in attributes] for w2 in attributes])
+    affprop = sklearn.cluster.AffinityPropagation(affinity="precomputed", damping=0.5)
+    affprop.fit(lev_similarity)
+    for cluster_id in np.unique(affprop.labels_):
+        exemplar = attributes[affprop.cluster_centers_indices_[cluster_id]]
+        cluster = np.unique(attributes[np.nonzero(affprop.labels_==cluster_id)])
+        cluster_str = ", ".join(cluster)
+        print(" - *%s:* %s" % (exemplar, cluster_str))
 
 
 # Start of Program
-nRows = 1000
-df = readFile("data.tsv",nRows)
+nRows = 1002276 #maxRows = 1002276
+#cutOff = 5 # Cutoff weights -Ignores attributes repeated less than cutoff times
+#attriWordsToIgnore = ['condition','price','shipping','return','location']
 
+
+
+filename = "data.tsv"
+start_time = time.time()
+
+#print(countFileLines(filename))
+#end_time = time.time() - start_time
+
+df = readFile(filename,nRows)
+
+# Find all attributes and convert to lower case
 attribute = df['attributes'].values
+attribute = [x.lower().strip() for x in attribute]
 
-a = createMasterAttributeList(attribute)
+filteredAttribute = createAttributeList(attribute)
 
-printMasterAttributeList(np.sort(np.unique(a)),'attributeList.csv')
-print(np.unique(a))
+#clusterAttributeNames(filteredAttribute)
 
+#print(np.unique(a))
+print("Time Taken: " + str(time.time() - start_time))
 
 
 
 #print(data[1:6])
 #print(len(df))
-
