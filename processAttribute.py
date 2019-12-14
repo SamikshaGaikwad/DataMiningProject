@@ -23,6 +23,9 @@ def appendToKey(myDict,key,value):
     myDict[key] = value
     return myDict
 
+def dictPush(myDict,key,value):
+    temp = {key:value}
+
 def createMasterAttributeList(attributeRows):
     attList = []
     masterDict = dict()
@@ -96,7 +99,7 @@ def clusterAttributeNames(attributes):
 
 # Main function to filter attributes
 def createAttributeList(attribute):
-    cutOff = 5 # Cutoff weights -Ignores attributes repeated less than cutoff times
+    cutOff = 2 # Cutoff weights -Ignores attributes repeated less than cutoff times
     attriWordsToIgnore = ['condition','price','ship','return','location','service','tax','gift','seller','refund','payments','expir']
 
     fullAttributeList,masterDict = createMasterAttributeList(attribute)
@@ -108,7 +111,6 @@ def createAttributeList(attribute):
     uniqAttriList,attriWts = calcAttributeWts(fullAttributeList) #set()
     #uniqAttriList = [x for x in fullAttributeList if x.lower() not in uniqAttriList and not uniqAttriList.add(x.lower())]
 
-
     uniqAttriList,attriWts = filterAttriByWts(uniqAttriList,attriWts,cutOff)
 
     uniqAttriList,attriWts = filterAttriByIgnoreList(uniqAttriList,attriWts,attriWordsToIgnore)
@@ -116,7 +118,24 @@ def createAttributeList(attribute):
     # Cluster list of attributes to cut down on attributes further
     #clusterAttributeNames(filteredAttribute)
 
+    # Delete the keys from master list based on new unique attribute list
+    masterDictFiltered = dict()
+    for keys in uniqAttriList:
+        thisVal = masterDict[keys]
+
+        # The ignore list words are also checked in the values of the attributes (eg: note: free shipping)
+        ignWordsContained = False
+        for thisValue in attriWordsToIgnore:
+            if thisValue.find(thisWord)>0:
+                ignWordsContained = True
+
+        if len(thisVal) >0 and not ignWordsContained:
+            masterDictFiltered.update({keys:masterDict[keys]})
+
+    uniqAttriList = list(masterDictFiltered.keys())
+
+
     print("Filtered number of Attributes are: " + str(len(attriWts)))
     printMasterAttributeList(uniqAttriList,'attributeList.csv')
     printMasterAttributeList(attriWts,'attributeList1.csv')
-    return masterDict
+    return masterDictFiltered

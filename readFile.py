@@ -17,9 +17,10 @@ stemmer = nltk.stem.porter.PorterStemmer()
 
 from processAttribute import *
 
-
-# Python code to merge dict using a single
-# expression
+def saveDictToFile(myDict,fname):
+    w = csv.writer(open(fname, "w"))
+    for key, val in myDict.items():
+        w.writerow([key, val])
 
 def countFileLines(filename):
     f = open(filename, "r+")
@@ -64,7 +65,7 @@ def preProcess(df):
     return df
 
 # Start of Program
-nRows = 1000 #maxRows = 1002276
+nRows = 1002276 #maxRows = 1002276
 #cutOff = 5 # Cutoff weights -Ignores attributes repeated less than cutoff times
 #attriWordsToIgnore = ['condition','price','shipping','return','location']
 
@@ -83,7 +84,8 @@ df = preProcess(df)
 # Get the attribute for processing
 attribute = df['attributes'].values
 masterDict = createAttributeList(attribute)
-print(masterDict)
+#print(masterDict)
+saveDictToFile(masterDict,'MasterDictionary.csv')
 #np.set_printoptions(threshold=sys.maxsize)
 #print(np.array(df))
 '''
