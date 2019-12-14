@@ -125,8 +125,8 @@ def createAttributeList(attribute):
 
         # The ignore list words are also checked in the values of the attributes (eg: note: free shipping)
         ignWordsContained = False
-        for thisValue in attriWordsToIgnore:
-            if thisValue.find(thisWord)>0:
+        for thisAttri in attriWordsToIgnore:
+            if thisVal.find(thisAttri)>0:
                 ignWordsContained = True
 
         if len(thisVal) >0 and not ignWordsContained:
