@@ -7,15 +7,18 @@ import re
 import numpy as np
 import mmap
 import sys
+#import multiprocessing as mp
 import nltk
 stemmer = nltk.stem.porter.PorterStemmer()
+
 #from sklearn.feature_extraction.text import TfidfVectorizer
 #from sklearn.datasets import load_files
 #nltk.download('stopwords')
 #import pickle
 #from nltk.corpus import stopwords
 
-from processAttribute import *
+import processAttribute as at
+#import tokenization as tk
 
 def saveDictToFile(myDict,fname):
     w = csv.writer(open(fname, "w"))
@@ -32,8 +35,7 @@ def countFileLines(filename):
     return lines
 
 def readFile(filename,nRows):
-    df = pd.read_csv(filename,delimiter="\t",usecols=(0,1,2,5,7),nrows=nRows)
-    data = df.values
+    df = pd.read_csv(filename,delimiter="\t",usecols=(0,1,5,7),nrows=nRows)
     return df
 
 def readValidation(filename):
@@ -65,7 +67,9 @@ def stemDataFrame(data):
     return data
 
 def preProcess(df):
+    #pool = mp.Pool(min(mp.cpu_count()-1,-1))
     for j in df.columns:
+        #pool( #Using parallel pool
         if j in ['title', 'attributes']:
             thisDf = df[j].values
             for i in range(len(thisDf)):
@@ -90,12 +94,12 @@ def preProcess(df):
                 thisDf[i] = stemDataFrame(thisDf[i])
             # Assign the value back into dataframe
             df[j].value = thisDf
+            #)  # End of parallel pool
     return df
 
 # Start of Program
-nRows = 1002276 #maxRows = 1002276
+nRows = 10000 #maxRows = 1002276
 #cutOff = 5 # Cutoff weights -Ignores attributes repeated less than cutoff times
-#attriWordsToIgnore = ['condition','price','shipping','return','location']
 
 filename = "data.tsv"
 start_time = time.time()
@@ -105,31 +109,30 @@ start_time = time.time()
 
 df = readFile(filename,nRows)
 #print(df.columns)
+catList = np.array(df['category'].values)
+catList = np.unique(catList)
 
 # Pre-process the input file for simplification
-df.to_csv(r'file1.csv')
 df = preProcess(df)
-df.to_csv(r'file2.csv')
-
+print("Pre Processing Time Taken: " + str(time.time() - start_time))
 # Get the attribute for processing
-attribute = df['attributes'].values
-masterDict = createAttributeList(attribute)
-#print(masterDict)
-saveDictToFile(masterDict,'MasterDictionary.csv')
-#np.set_printoptions(threshold=sys.maxsize)
+for catId in range(len(catList)):
+    print(catList[catId])
+    catbool = df['category']== catList[catId]
+    sectDf = df[catbool]
+    attribute = sectDf['attributes'].values
+    masterDict = at.createAttributeList(attribute)
+    #print(masterDict)
+    saveDictToFile(masterDict,'MasterDictionary' + str(catList[catId]) + '.csv')
+    #np.set_printoptions(threshold=sys.maxsize)
+
+
+# Tokenization of values
+#tokenDict = tk.getTokenDict(masterDict)
+
 #print(np.array(df))
-'''
-tfidfconverter = TfidfVectorizer(max_features=1500, min_df=5, max_df=0.7)
-X = tfidfconverter.fit_transform(attribute).toarray()
-np.set_printoptions(threshold=sys.maxsize)
-print(X)
-'''
-
-
-
-
 #print(np.unique(a))
-print("Time Taken: " + str(time.time() - start_time))
+print("Total Time Taken: " + str(time.time() - start_time))
 
 
 

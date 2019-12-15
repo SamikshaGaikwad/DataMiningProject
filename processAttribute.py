@@ -19,8 +19,9 @@ def findKeys(dictn):
 
 def appendToKey(myDict,key,value):
     temp = myDict.pop(key,[])
-    temp.append(value)
-    myDict[key] = value
+    if not value in temp:
+        temp.append(value)
+    myDict[key] = temp
     return myDict
 
 def dictPush(myDict,key,value):
@@ -48,15 +49,16 @@ def processAttributeStr(thisAttri):
     thisstr = re.split(":+",thisAttri)
     strSz = len(thisstr)
     for idx in range(strSz-1):
-        attriTitle = re.split(',',thisstr[idx].strip())[-1]
+        # find all titles as the string before colon and remove leading/trailing spaces
+        attriTitle = re.split(',',thisstr[idx].strip())[-1].strip()
+
         if idx == strSz -2:
             attriVal = re.split(',',thisstr[idx+1].strip())[0:]
         else:
             attriVal = re.split(',',thisstr[idx+1].strip())[0:-1]
-
         #attDict[attriTitle] = attriVal
         appendToKey(attDict,attriTitle,attriVal)
-        #print(attDict)
+
     return attDict
 
 def calcAttributeWts(thisAttri):
@@ -82,7 +84,7 @@ def filterAttriByWts(attriList,cutOff):
 def filterAttriByIgnoreList(uniqAttriList,attriWts,attriWordsToIgnore):
     goodId = len(uniqAttriList) * [True]
     for thisWord in attriWordsToIgnore:
-        goodId = np.logical_and(goodId,[x.find(thisWord)==-1 for x in uniqAttriList])
+        goodId = np.logical_and(goodId,[x.find(thisWord)==-1 and not x.isnumeric() for x in uniqAttriList])
     uniqAttriList = np.array(uniqAttriList)
     attriWts = np.array(attriWts)
     return uniqAttriList[goodId],attriWts[goodId]
@@ -105,7 +107,8 @@ def createAttributeList(attribute):
     cutOff = 2 # Cutoff weights -Ignores attributes repeated less than cutoff times
     attriWordsToIgnore = ['condition','price','ship','return','location','service',
     'tax','gift','seller','refund','payments','expir','delive',
-    'msrp','desc']
+    'msrp','desc','cust']
+    # cust - customer or custom1...
 
     fullAttributeList,masterDict = createMasterAttributeList(attribute)
     print("Original Number of Attributes: " + str(len(fullAttributeList)))
@@ -113,8 +116,6 @@ def createAttributeList(attribute):
     #uniqAttributeList = list(set(fullAttributeList))
 
     # Get Case Insensitive Unique list
-    #uniqAttriList,attriWts = calcAttributeWts(fullAttributeList) #set()
-    #uniqAttriList = [x for x in fullAttributeList if x.lower() not in uniqAttriList and not uniqAttriList.add(x.lower())]
 
     uniqAttriList,attriWts = filterAttriByWts(fullAttributeList,cutOff)
     uniqAttriList,attriWts = filterAttriByIgnoreList(uniqAttriList,attriWts,attriWordsToIgnore)
@@ -141,6 +142,6 @@ def createAttributeList(attribute):
 
 
     print("Filtered number of Attributes are: " + str(len(attriWts)))
-    printMasterAttributeList(uniqAttriList,'attributeList.csv')
-    printMasterAttributeList(attriWts,'attributeList1.csv')
+    #printMasterAttributeList(uniqAttriList,'attributeList.csv')
+    #printMasterAttributeList(attriWts,'attributeList1.csv')
     return masterDictFiltered
