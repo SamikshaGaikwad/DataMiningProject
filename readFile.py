@@ -153,13 +153,13 @@ for catId in range(len(catList)):
     saveDictToFile(masterDict,'MasterDictionary' + str(catList[catId]) + '.csv')
     #np.set_printoptions(threshold=sys.maxsize)
     dataMatrix = tk.tokenizeData(sectDf,masterDict)
-    print("Starting Clustering for Group : " + catList[catId] + "Time: " + str(time.time() - start_time))
+    print("Starting Clustering for Group : " + str(catList[catId]) + "Time: " + str(time.time() - start_time))
 
     cluster = AgglomerativeClustering(n_clusters = None,
     distance_threshold = 0.005,compute_full_tree=True, linkage = "ward")
     cluster.fit_predict(dataMatrix)
     labels = cluster.labels_
-    print("End of Clustering for Group : " + catList[catId] + "Time: " + str(time.time() - start_time))
+    print("End of Clustering for Group : " + str(catList[catId]) + "Time: " + str(time.time() - start_time))
 
     clusterDict = dict()
 
