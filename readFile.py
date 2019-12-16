@@ -6,7 +6,9 @@ import pandas as pd
 import re
 import numpy as np
 import mmap
+import matplotlib.pyplot as plt
 import sys
+from sklearn.cluster import AgglomerativeClustering
 #import multiprocessing as mp
 import nltk
 stemmer = nltk.stem.porter.PorterStemmer()
@@ -18,7 +20,7 @@ stemmer = nltk.stem.porter.PorterStemmer()
 #from nltk.corpus import stopwords
 
 import processAttribute as at
-#import tokenization as tk
+import tokenization as tk
 
 def saveDictToFile(myDict,fname):
     w = csv.writer(open(fname, "w"))
@@ -44,6 +46,29 @@ def readValidation(filename):
     print(data[:,-1])
     print(len(np.unique(data[:,:1])))
     return data
+
+def printClusterAssign(df,labels):
+    labelsList = np.unique(labels)
+    count = 0
+    empty = 0
+    count1 = 0
+    for i in labelsList:
+        thisCluster = df[labels == i]
+        x = thisCluster['title'].values
+
+        if len(x)>1:
+            print("New Cluster:" )
+            print(x)
+            print(thisCluster['attributes'].values)
+            print("\n\n" )
+            count += 1
+        if len(x) == 0:
+            empty+=1
+        if len(x) == 1:
+            count1+=1
+    print(len(labelsList))
+    print("More than1: " + str(count) + ", Empty: " + str(empty) + ", Only 1: " + str(count1))
+
 
 def stemDataFrame(data):
     sepWord = []
@@ -98,7 +123,7 @@ def preProcess(df):
     return df
 
 # Start of Program
-nRows = 10000 #maxRows = 1002276
+nRows = 1002276 #maxRows = 1002276
 #cutOff = 5 # Cutoff weights -Ignores attributes repeated less than cutoff times
 
 filename = "data.tsv"
@@ -112,12 +137,14 @@ df = readFile(filename,nRows)
 catList = np.array(df['category'].values)
 catList = np.unique(catList)
 
+indexes = np.array(df['index'].values)
+
 # Pre-process the input file for simplification
 df = preProcess(df)
 print("Pre Processing Time Taken: " + str(time.time() - start_time))
 # Get the attribute for processing
+
 for catId in range(len(catList)):
-    print(catList[catId])
     catbool = df['category']== catList[catId]
     sectDf = df[catbool]
     attribute = sectDf['attributes'].values
@@ -125,11 +152,44 @@ for catId in range(len(catList)):
     #print(masterDict)
     saveDictToFile(masterDict,'MasterDictionary' + str(catList[catId]) + '.csv')
     #np.set_printoptions(threshold=sys.maxsize)
+    dataMatrix = tk.tokenizeData(sectDf,masterDict)
+    print("Starting Clustering for Group : " + catList[catId] + "Time: " + str(time.time() - start_time))
 
+    cluster = AgglomerativeClustering(n_clusters = None,
+    distance_threshold = 0.005,compute_full_tree=True, linkage = "ward")
+    cluster.fit_predict(dataMatrix)
+    labels = cluster.labels_
+    print("End of Clustering for Group : " + catList[catId] + "Time: " + str(time.time() - start_time))
+
+    clusterDict = dict()
+
+    index1 = sectDf['index'].values
+    for i in range(len(index1)):
+        clusterDict[index1[i]] = labels[i]
+    fname = 'ClusterAssignment_Group_' + str(catId) + '.csv'
+    saveDictToFile(clusterDict,fname)
+
+
+'''
+    print(np.unique(labels))
+    printClusterAssign(sectDf,labels)
+    print(df['title'].values[4026])
+    print(df['attributes'].values[4026])
+    print('')
+    print(df['title'].values[8064])
+    print(df['attributes'].values[8064])
+    print('')
+'''
+    #print(df['title'].values)
 
 # Tokenization of values
 #tokenDict = tk.getTokenDict(masterDict)
 
+'''
+    plt.figure(figsize=(10, 7))
+    plt.scatter(dataMatrix[:,0], dataMatrix[:,1], c=cluster.labels_, cmap='rainbow')
+    plt.show()
+'''
 #print(np.array(df))
 #print(np.unique(a))
 print("Total Time Taken: " + str(time.time() - start_time))
